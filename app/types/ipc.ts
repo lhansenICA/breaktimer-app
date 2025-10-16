@@ -15,4 +15,6 @@ export enum IpcChannel {
   SettingsSet = "SETTINGS_SET",
   TimeSinceLastBreakGet = "TIME_SINCE_LAST_BREAK_GET",
   WasStartedFromTrayGet = "WAS_STARTED_FROM_TRAY_GET",
+  HistoryGet = "HISTORY_GET",
+  HistoryClear = "HISTORY_CLEAR",
 }

@@ -2,6 +2,7 @@ import { app, dialog, Menu, Tray } from "electron";
 import log from "electron-log";
 import moment from "moment";
 import path from "path";
+import fs from "fs";
 import packageJson from "../../../package.json";
 import { Settings } from "../../types/settings";
 import {
@@ -17,7 +18,11 @@ import {
   setDisableEndTime,
   setSettings,
 } from "./store";
-import { closeBreakWindows, createSettingsWindow } from "./windows";
+import {
+  closeBreakWindows,
+  createHistoryWindow,
+  createSettingsWindow,
+} from "./windows";
 
 let tray: Tray;
 let lastMinsLeft = 0;
@@ -69,10 +74,34 @@ export function buildTray(): void {
           ? "resources/tray/tray-IconTemplate.png"
           : path.join(resourcesPath, "tray", "tray-IconTemplate.png");
     } else {
-      imgPath =
-        process.env.NODE_ENV === "development"
-          ? "resources/tray/icon.png"
-          : path.join(app.getAppPath(), "..", "tray", "icon.png");
+      if (process.env.NODE_ENV === "development") {
+        imgPath = "resources/tray/icon.png";
+      } else {
+        // In production, try multiple possible paths
+        const possiblePaths = [
+          path.join(process.resourcesPath, "tray", "icon.png"),
+          path.join(app.getAppPath(), "..", "tray", "icon.png"),
+          path.join(
+            __dirname,
+            "..",
+            "..",
+            "..",
+            "resources",
+            "tray",
+            "icon.png",
+          ),
+        ];
+
+        imgPath =
+          possiblePaths.find((p) => {
+            try {
+              fs.accessSync(p);
+              return true;
+            } catch {
+              return false;
+            }
+          }) || possiblePaths[0];
+      }
     }
 
     tray = new Tray(imgPath);
@@ -225,6 +254,11 @@ export function buildTray(): void {
     },
     { type: "separator" },
     { label: "Settings...", click: createSettingsWindow },
+    {
+      label: "History...",
+      click: createHistoryWindow,
+      enabled: getSettings().historyEnabled,
+    },
     { label: "About...", click: createAboutWindow },
     { label: "Quit", click: quit },
   ]);

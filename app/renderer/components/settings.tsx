@@ -6,6 +6,7 @@ import AdvancedCard from "./settings/advanced-card";
 import AudioCard from "./settings/audio-card";
 import BackdropCard from "./settings/backdrop-card";
 import BreaksCard from "./settings/breaks-card";
+import HistoryCard from "./settings/history-card";
 import SettingsCard from "./settings/settings-card";
 import SettingsHeader from "./settings/settings-header";
 import SkipCard from "./settings/skip-card";
@@ -96,6 +97,7 @@ export default function SettingsEl() {
       ...settingsDraft,
       textColor: "#ffffff",
       backgroundColor: "#16a085",
+      secondaryColor: "#3498db",
       backdropOpacity: 0.7,
     });
   };
@@ -199,6 +201,13 @@ export default function SettingsEl() {
               settingsDraft={settingsDraft}
               onSwitchChange={handleSwitchChange}
               onSliderChange={handleSliderChange}
+            />
+          </TabsContent>
+
+          <TabsContent value="history" className="m-0 space-y-6">
+            <HistoryCard
+              settingsDraft={settingsDraft}
+              onSwitchChange={handleSwitchChange}
             />
           </TabsContent>
 

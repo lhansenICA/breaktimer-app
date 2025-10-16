@@ -29,7 +29,7 @@ export default function ThemeCard({
         </h3>
       </div>
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           <div className="space-y-2">
             <Label
               className="text-sm font-medium"
@@ -46,6 +46,24 @@ export default function ThemeCard({
               type="color"
               value={settingsDraft.backgroundColor}
               onChange={onTextChange.bind(null, "backgroundColor")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label
+              className="text-sm font-medium"
+              style={{ color: settingsDraft.textColor }}
+            >
+              Secondary color
+            </Label>
+            <input
+              className="w-20 h-10 rounded cursor-pointer border appearance-none [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded"
+              style={{
+                backgroundColor: settingsDraft.secondaryColor,
+                borderColor: `${settingsDraft.textColor}4D`, // 30% opacity
+              }}
+              type="color"
+              value={settingsDraft.secondaryColor}
+              onChange={onTextChange.bind(null, "secondaryColor")}
             />
           </div>
           <div className="space-y-2">

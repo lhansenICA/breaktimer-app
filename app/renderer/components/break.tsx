@@ -17,6 +17,7 @@ export default function Break() {
   const [sharedBreakEndTime, setSharedBreakEndTime] = useState<number | null>(
     null,
   );
+  const [breakStartTime] = useState(new Date());
 
   useEffect(() => {
     const init = async () => {
@@ -98,6 +99,7 @@ export default function Break() {
   }, []);
 
   const handleEndBreak = useCallback(async () => {
+    console.log("handleEndBreak called - manual break end");
     // Only play end sound from primary window
     const urlParams = new URLSearchParams(window.location.search);
     const windowId = urlParams.get("windowId");
@@ -107,9 +109,17 @@ export default function Break() {
       ipcRenderer.invokeEndSound(settings.soundType, settings.breakSoundVolume);
     }
 
+    // Track break completion for manual end
+    const breakDurationMs = new Date().getTime() - breakStartTime.getTime();
+    console.log(
+      "Manual break end, calling completeBreakTracking with duration:",
+      breakDurationMs,
+    );
+    await ipcRenderer.invokeCompleteBreakTracking(breakDurationMs);
+
     // Broadcast to all windows to start their closing animations
     await ipcRenderer.invokeBreakEnd();
-  }, [settings]);
+  }, [settings, breakStartTime]);
 
   if (settings === null || allowPostpone === null) {
     return null;

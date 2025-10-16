@@ -47,12 +47,14 @@ export interface Settings {
   breakMessage: string;
   backgroundColor: string;
   textColor: string;
+  secondaryColor: string;
   showBackdrop: boolean;
   backdropOpacity: number;
   endBreakEnabled: boolean;
   skipBreakEnabled: boolean;
   postponeBreakEnabled: boolean;
   immediatelyStartBreaks: boolean;
+  historyEnabled: boolean;
 }
 
 export const defaultWorkingRange: WorkingHoursRange = {
@@ -106,12 +108,14 @@ export const defaultSettings: Settings = {
   breakMessage: "Rest your eyes.\nStretch your legs.\nBreathe. Relax.",
   backgroundColor: "#16a085",
   textColor: "#ffffff",
+  secondaryColor: "#3498db",
   showBackdrop: true,
   backdropOpacity: 0.7,
   endBreakEnabled: true,
   skipBreakEnabled: false,
   postponeBreakEnabled: true,
   immediatelyStartBreaks: false,
+  historyEnabled: true,
 };
 
 export interface DayConfig {

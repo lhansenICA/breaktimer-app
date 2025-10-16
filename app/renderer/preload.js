@@ -77,5 +77,8 @@ process.once("loaded", () => {
         cb();
       });
     },
+    invoke: (channel, ...args) => {
+      return ipcRenderer.invoke(channel, ...args);
+    },
   });
 });

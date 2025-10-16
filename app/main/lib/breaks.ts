@@ -9,6 +9,8 @@ import {
   Settings,
   SoundType,
 } from "../../types/settings";
+import { HistoryEventType } from "../../types/history";
+import { addHistoryEvent } from "./history";
 import { sendIpc } from "./ipc";
 import { showNotification } from "./notifications";
 import { getSettings } from "./store";
@@ -61,25 +63,31 @@ export function startBreakTracking(): void {
 }
 
 export function completeBreakTracking(breakDurationMs: number): void {
-  if (!currentBreakStartTime) return;
+  log.info(
+    "completeBreakTracking function called with duration:",
+    breakDurationMs,
+  );
+  if (!currentBreakStartTime) {
+    log.warn("completeBreakTracking called but no currentBreakStartTime");
+    return;
+  }
 
   const settings = getSettings();
   const requiredDurationMs = settings.breakLengthSeconds * 1000;
   const halfRequiredDuration = requiredDurationMs / 2;
+  const breakDurationSeconds = Math.round(breakDurationMs / 1000);
+
+  addHistoryEvent(HistoryEventType.BreakEnd, breakDurationSeconds);
 
   if (breakDurationMs >= halfRequiredDuration) {
     lastCompletedBreakTime = new Date();
     hasSkippedOrSnoozedSinceLastBreak = false;
     log.info(
-      `Break completed [duration=${Math.round(
-        breakDurationMs / 1000,
-      )}s] [required=${settings.breakLengthSeconds}s]`,
+      `Break completed [duration=${breakDurationSeconds}s] [required=${settings.breakLengthSeconds}s]`,
     );
   } else {
     log.info(
-      `Break too short [duration=${Math.round(
-        breakDurationMs / 1000,
-      )}s] [required=${settings.breakLengthSeconds}s]`,
+      `Break too short [duration=${breakDurationSeconds}s] [required=${settings.breakLengthSeconds}s]`,
     );
   }
 
@@ -141,6 +149,7 @@ export function scheduleNextBreak(isPostpone = false): void {
 
   if (idleStart) {
     createIdleNotification();
+    addHistoryEvent(HistoryEventType.IdleReset);
     idleStart = null;
     postponedCount = 0;
 
@@ -189,20 +198,27 @@ export function postponeBreak(action = "snoozed"): void {
   postponedCount++;
   havingBreak = false;
   hasSkippedOrSnoozedSinceLastBreak = true;
-  log.info(`Break ${action} [count=${postponedCount}]`);
 
   if (action === "skipped") {
+    log.info("postponeBreak: Adding BreakSkip event");
+    addHistoryEvent(HistoryEventType.BreakSkip);
     log.info("Creating break with normal frequency");
     scheduleNextBreak();
   } else {
+    log.info("postponeBreak: Adding BreakPostpone event");
+    addHistoryEvent(HistoryEventType.BreakPostpone);
     log.info("Creating break with postpone length");
     scheduleNextBreak(true);
   }
+
+  log.info(`Break ${action} [count=${postponedCount}]`);
 }
 
 function doBreak(): void {
+  log.info("doBreak function called - about to add BreakStart event");
   havingBreak = true;
   startBreakTracking();
+  addHistoryEvent(HistoryEventType.BreakStart);
 
   const settings: Settings = getSettings();
   log.info(`Break started [type=${settings.notificationType}]`);

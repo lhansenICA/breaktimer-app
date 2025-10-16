@@ -79,6 +79,10 @@ export function BreakProgress({
           // Always track break completion, regardless of which window triggers it
           const breakDurationMs =
             new Date().getTime() - breakStartTime.getTime();
+          console.log(
+            "Break completed naturally, calling completeBreakTracking with duration:",
+            breakDurationMs,
+          );
           ipcRenderer.invokeCompleteBreakTracking(breakDurationMs);
 
           onEndBreak();

@@ -1,5 +1,10 @@
 import { BrowserWindow, ipcMain, IpcMainInvokeEvent, screen } from "electron";
 import log from "electron-log";
+import {
+  HistoryEvent,
+  HistoryEventType,
+  HistoryFilter,
+} from "../../types/history";
 import { IpcChannel } from "../../types/ipc";
 import { Settings, SoundType } from "../../types/settings";
 import {
@@ -10,6 +15,7 @@ import {
   postponeBreak,
   wasStartedFromTray,
 } from "./breaks";
+import { addHistoryEvent, clearHistory, getHistory } from "./history";
 import {
   getSettings,
   setSettings,
@@ -145,4 +151,23 @@ ipcMain.handle(IpcChannel.AppInitializedGet, (): boolean => {
 ipcMain.handle(IpcChannel.AppInitializedSet, (): void => {
   log.info(IpcChannel.AppInitializedSet);
   setAppInitialized();
+});
+
+ipcMain.handle(
+  IpcChannel.HistoryGet,
+  (_event: IpcMainInvokeEvent, filter?: HistoryFilter): HistoryEvent[] => {
+    log.info(IpcChannel.HistoryGet);
+    return getHistory(filter);
+  },
+);
+
+ipcMain.handle(IpcChannel.HistoryClear, (): void => {
+  log.info(IpcChannel.HistoryClear);
+  clearHistory();
+});
+
+// Test function to manually add history event
+ipcMain.handle("HISTORY_TEST", (): void => {
+  log.info("HISTORY_TEST - manually adding test event");
+  addHistoryEvent(HistoryEventType.BreakStart);
 });

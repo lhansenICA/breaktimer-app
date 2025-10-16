@@ -2,13 +2,37 @@ import { app, shell } from "electron";
 import electronDebug from "electron-debug";
 import log from "electron-log";
 import { autoUpdater } from "electron-updater";
+import path from "path";
+import fs from "fs";
+
+// Setup logging to file
+const logDir = path.join(app.getPath("userData"), "logs");
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
+const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+const logFile = path.join(logDir, `breaktimer-${timestamp}.log`);
+
+log.transports.file.resolvePathFn = () => logFile;
+log.transports.file.level = "debug";
+log.transports.console.level = "debug";
+
+// Override console.log to also write to electron-log
+const originalConsoleLog = console.log;
+console.log = (...args) => {
+  originalConsoleLog(...args);
+  log.info(...args);
+};
 import { setAutoLauch } from "./lib/auto-launch";
 import { initBreaks } from "./lib/breaks";
+import { addHistoryEvent, initHistory } from "./lib/history";
 import "./lib/ipc";
 import { showNotification } from "./lib/notifications";
 import { getAppInitialized } from "./lib/store";
 import { initTray } from "./lib/tray";
 import { createSettingsWindow, createSoundsWindow } from "./lib/windows";
+import { HistoryEventType } from "../types/history";
 
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -112,6 +136,10 @@ app.on("window-all-closed", () => {
   // Pass
 });
 
+app.on("before-quit", () => {
+  addHistoryEvent(HistoryEventType.AppStop);
+});
+
 app.on("ready", async () => {
   if (
     process.env.NODE_ENV === "development" ||
@@ -143,6 +171,9 @@ app.on("ready", async () => {
     // App has been initialized before, don't show settings automatically
   }
 
+  log.info("App ready: Adding AppStart event");
+  initHistory();
+  addHistoryEvent(HistoryEventType.AppStart);
   initBreaks();
   initTray();
   createSoundsWindow();

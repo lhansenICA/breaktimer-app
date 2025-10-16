@@ -6,10 +6,11 @@ import { getSettings } from "./store";
 
 let settingsWindow: BrowserWindow | null = null;
 let soundsWindow: BrowserWindow | null = null;
+let historyWindow: BrowserWindow | null = null;
 let breakWindows: BrowserWindow[] = [];
 
 const getBrowserWindowUrl = (
-  page: "settings" | "sounds" | "break",
+  page: "settings" | "sounds" | "break" | "history",
   windowId?: number,
 ): string => {
   const windowParam = windowId !== undefined ? `&windowId=${windowId}` : "";
@@ -30,6 +31,9 @@ export function getWindows(): BrowserWindow[] {
   }
   if (soundsWindow !== null) {
     windows.push(soundsWindow);
+  }
+  if (historyWindow !== null) {
+    windows.push(historyWindow);
   }
   windows.push(...breakWindows);
   return windows;
@@ -95,6 +99,45 @@ export function createSoundsWindow(): void {
   });
 
   soundsWindow.loadURL(getBrowserWindowUrl("sounds"));
+}
+
+export function createHistoryWindow(): void {
+  if (historyWindow) {
+    historyWindow.show();
+    return;
+  }
+
+  historyWindow = new BrowserWindow({
+    title: "BreakTimer — History",
+    show: false,
+    width: 900,
+    minWidth: 700,
+    height: 700,
+    minHeight: 500,
+    autoHideMenuBar: true,
+    icon:
+      process.env.NODE_ENV === "development"
+        ? path.join(__dirname, "../../../resources/tray/icon.png")
+        : path.join(process.resourcesPath, "app/resources/tray/icon.png"),
+    webPreferences: {
+      devTools: true,
+      preload: path.join(__dirname, "../../renderer/preload.js"),
+    },
+  });
+
+  historyWindow.loadURL(getBrowserWindowUrl("history"));
+
+  historyWindow.on("ready-to-show", () => {
+    if (!historyWindow) {
+      throw new Error('"historyWindow" is not defined');
+    }
+    historyWindow.show();
+    historyWindow.focus();
+  });
+
+  historyWindow.on("closed", () => {
+    historyWindow = null;
+  });
 }
 
 export function createBreakWindows(): void {

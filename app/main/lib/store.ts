@@ -2,6 +2,7 @@ import Store from "electron-store";
 import { defaultSettings, Settings } from "../../types/settings";
 import { setAutoLauch } from "./auto-launch";
 import { initBreaks } from "./breaks";
+import { clearHistory } from "./history";
 
 interface Migration {
   version: number;
@@ -99,6 +100,22 @@ const migrations: Migration[] = [
       return settings;
     },
   },
+  {
+    version: 3,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    migrate: (settings: any) => {
+      // Add historyEnabled field if missing
+      if (settings.historyEnabled === undefined) {
+        console.log("Adding historyEnabled field to settings");
+        settings.historyEnabled = true; // Enable by default for existing users
+      }
+      if (settings.secondaryColor === undefined) {
+        console.log("Adding secondaryColor field to settings");
+        settings.secondaryColor = "#3498db";
+      }
+      return settings;
+    },
+  },
 ];
 
 const store = new Store({
@@ -154,7 +171,13 @@ function migrateSettings(settings: any): Settings {
 export function getSettings(): Settings {
   const settings = store.get("settings");
   const migratedSettings = migrateSettings(settings);
-  return Object.assign({}, defaultSettings, migratedSettings) as Settings;
+  const finalSettings = Object.assign(
+    {},
+    defaultSettings,
+    migratedSettings,
+  ) as Settings;
+  console.log("getSettings - historyEnabled:", finalSettings.historyEnabled);
+  return finalSettings;
 }
 
 export function setSettings(settings: Settings, resetBreaks = true): void {
@@ -162,6 +185,10 @@ export function setSettings(settings: Settings, resetBreaks = true): void {
 
   if (currentSettings.autoLaunch !== settings.autoLaunch) {
     setAutoLauch(settings.autoLaunch);
+  }
+
+  if (currentSettings.historyEnabled && !settings.historyEnabled) {
+    clearHistory();
   }
 
   store.set({ settings });
